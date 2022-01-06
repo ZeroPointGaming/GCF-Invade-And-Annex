@@ -1,0 +1,361 @@
+//------------------------- On Load
+author = Quicksilver, Rarek, Justin and [GCF];
+onLoadName = "Invade & Annex 3 Altis";
+OnLoadMission = "- Welcome back to [GCF]'s Invade and Annex 3 <br />- Join us on TeamSpeak: 85.236.100.121:10247";
+loadScreen = "media\images\loading.paa";
+overviewPicture = "";
+onLoadIntro = "Welcome to [GCF]'s Invade And Annex 3";
+onLoadIntroTime = 0;
+onLoadMissionTime = 0;
+
+class Header {
+		gameType = COOP;
+		minPlayers = 1;	
+		maxPlayers = 66;
+	};
+	
+//------------------------- Admin
+enableDebugConsole = 0;
+allowFunctionsLog = 0;
+onPauseScript = "scripts\onpause.sqf";
+
+//------------------------- Misc
+disableChannels[] = {{0,false,true},{1,false,false},{2,false,false},{6,false,false}};									// 0 = Global, 1 = Side, 2 = Command, 3 = Group, 4 = Vehicle, 5 = Direct, 6 = System. Admin/server/BattlEye can still use Global.
+disabledAI = 1;
+aiKills = 0;
+enableItemsDropping = 0;
+joinUnassigned = 1;
+showUAVFeed = 1;
+
+//-------------------------Respawn
+class CfgRespawnTemplates {
+    class derp_revive {
+        // Function or script executed upon death. Parameters passed into it are the same as are passed into onPlayerKilled.sqf file
+        onPlayerKilled = "derp_revive_fnc_onPlayerKilled";
+        // Function or script executed upon respawn. Parameters passed into it are the same as are passed into onPlayerRespawn.sqf file
+        onPlayerRespawn = "derp_revive_fnc_onPlayerRespawn";
+        // Default respawn delay (can be overwitten by description.ext entry of the same name)
+        respawnDelay = 10;
+        // 1 to respawn player when he joins the game. Available only for INSTANT and BASE respawn types
+        // Can be overridden by description.ext attribute of the same name
+        respawnOnStart = -1;
+    };
+};
+
+//------------------------- Respawn Functions
+respawn = 3;
+respawnDelay = 10;
+respawnOnStart = 0;
+ReviveMode = 1;
+ReviveUnconsciousStateMode = 0;
+ReviveRequiredTrait = 0;
+ReviveRequiredItems = 1;
+ReviveRequiredItemsFakConsumed = 1;
+ReviveDelay = 10;
+ReviveMedicSpeedMultiplier = 1.5;
+ReviveForceRespawnDelay = 3;
+ReviveBleedOutDelay = 300;
+derp_revive_bleedOutTimer = 300;
+derp_revive_everyoneCanRevive = 0;
+derp_revive_reviveItem = 1;
+derp_revive_removeFAKOnUse = 0;
+
+//------------------------- Garbage collector
+wreckLimit = 10;
+wreckRemovalMinTime = 240;
+wreckRemovalMaxTime = 720;
+corpseLimit = 20;
+corpseRemovalMinTime = 450;
+corpseRemovalMaxTime = 900;
+
+//------------------------- Includes
+#include "scripts\vehicle\crew\common.hpp"  			// vehicle crew hud
+#include "functions\CHVD\dialog.hpp"					// CHVD View Distance script
+
+//------------------------- Includes Global Coalition Force Artillery Computer
+#include "gcfArtyComputer\defines.hpp"
+#include "gcfArtyComputer\dialogs.hpp"
+
+//------------------------- Includes admin menu
+#include "gcfAdminMenu\dialogs.hpp"
+
+//------------------------- Chat Commands
+class Main_Aos
+	{
+		#include "defines\MainAos.hpp"
+	};
+class unitList
+	{
+		#include "defines\units.hpp"
+	};
+class CfgFunctions
+	{
+		#include "functions\cfgfunctions.hpp"
+	};
+class CfgNotifications
+	{
+		#include "defines\Notifications.hpp"
+	};
+class CfgTaskTypes
+	{
+		#include "defines\Tasks.hpp"
+	};
+class RscTitles
+	{
+		#include "scripts\vehicle\crew\namesleft.hpp"
+		#include "restartWarnings\hpp\RscDisplayRestartWarnings.hpp"
+	};
+class CfgSounds {
+    sounds[] = {Vent,Vent2,Para};
+    class derp_heartBeat1 {
+        name = "derp_heart1";
+        sound[] = {"@A3\sounds_f\characters\human-sfx\other\heart_4_1", 1, 1};
+        titles[] = {0, ""};
+    };
+    class derp_heartBeat2 {
+        name = "derp_heart2";
+        sound[] = {"@A3\sounds_f\characters\human-sfx\other\heart_4_3", 1, 1};
+        titles[] = {0, ""};
+    };
+    class derp_heartBeat3 {
+        name = "derp_heart3";
+        sound[] = {"@A3\sounds_f\characters\human-sfx\other\heart_4_4", 1, 1};
+        titles[] = {0, ""};
+    };
+    class derp_heartBeat4 {
+        name = "derp_heart4";
+        sound[] = {"@A3\sounds_f\characters\human-sfx\other\heart_4_5", 1, 1};
+        titles[] = {0, ""};
+    };
+};
+	
+//------------------------- Parameters
+class Params
+	{
+		class initialWeatherParam {
+			title = "Starting Weather";
+			values[] = {0,1,2,3,4};
+			texts[] = {"Clear","Overcast","Rain","Fog","Random"};
+			default = 4;
+		};
+		class title1
+		{
+			title = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Misc Settings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+			values[] = {0};
+			texts[] = {""};
+			default = 0;
+		};
+		class DebugConsole {
+				title = $STR_A3_paramDebugConsole_title;
+				values[] = {0,1};
+				texts[] = {$STR_DISABLED,$STR_ENABLED};
+				default = 1;
+		};
+		class PlayerEditingAreaSize {
+				title = "Distance in metres from players in which Zeus cannot edit";
+				values[] = {0,100,200,300,500,1000};
+				texts[] = {0,100,200,300,500,1000};
+				default = 0;
+		};
+		class MainEnemyFaction {
+			title = "Main Enemy Faction (Not Working Yet)";
+			values[] = {1,2,3,4,5,6,7};
+			texts[] = {"CSAT","CSAT Tropic","AAF","ParaMillitary","Bandits","FIA Independent","FIA Opfor"};
+			default = 1;
+		};
+		class SecondaryEnemyFaction {
+			title = "Secondary Enemy Faction (Not Working Yet)";
+			values[] = {1,2,3,4,5,6,7};
+			texts[] = {"CSAT","CSAT Tropic","AAF","ParaMillitary","Bandits","FIA Independent","FIA Opfor"};
+			default = 3;
+		};
+		class VehicleRespawnDistance {
+			title = "Distance from players that vehicles won't respawn";
+			values[] = {10,50,100,200,300,400,500,1000,2000,5000,10000};
+			texts[] = {"10m","50m","100m","200m","300m","400m","500m","1km","2km","5km","10km"};
+			default = 500;
+		};
+		class ArtilleryTargetTickTimeMin {
+			title = "MINIMUM Time between Priority Target actions";
+			values[] = {30,60,120,180,240,300,600,900};
+			texts[] = {"30 seconds","1 minute","2 minutes","3 minutes","4 minutes","5 minutes","10 minutes","15 minutes"};
+			default = 600; // 120 default
+		};
+		class ArtilleryTargetTickTimeMax {
+			title = "MAXIMUM Time between Priority Target actions";
+			values[] = {30,60,120,180,240,300,600,900};
+			texts[] = {"30 seconds","1 minute","2 minutes","3 minutes","4 minutes","5 minutes","10 minutes","15 minutes"};
+			default = 900; // 300 default
+		};
+		class ArsenalFilter {
+			title = "Filter mode of the arsenal";
+			texts[] = {"Arsenal disabled", "Arsenal enabled but filtered", "Arsenal enabled"};
+			values[] = {0, 1, 2};
+			default = 1;
+		};
+		class Fatigue {
+			title = "Enable Fatigue";
+			texts[] = {"Yes","No"};
+			values[] = {0, 1};
+			default = 1;
+		};
+		class UH80TurretControl {
+			title = "UH-80 Pilot Turret Control";
+			values[] = {0,1};
+			texts[] = {"DISABLED","ENABLED"};
+			default = 1;
+		};
+		class title0
+		{
+			title = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ AO's Infantry Only ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+			values[] = {0};
+			texts[] = {""};
+			default = 0;
+		};
+		class EnemyLeftThreshholdInfantry {
+			title = "Enemy Infantry Only Left Threshold";
+			values[] = {1,2,3,4,5,6,7,8,9,10};
+			texts[] = {"1","2","3","4","5","6","7","8","9","10"};
+			default = 6;
+		};
+		class AOSizeInfantry {
+			title = "Main AO Diameter";
+			values[] = {200,300,400,500,600,700,800,900,1000};
+			texts[] = {"200m","300m","400m","500m","600m","700m","800m","900m","1,000m"};
+			default = 500;
+		};
+		class InfantryGroupsAmountInfantry {
+			title = "Amount of infantry groups on the Infantry Only";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 8;
+		};
+		class AAGroupsAmountInfantry {
+			title = "Amount of AA groups on the Infantry Only";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 2;
+		};
+		class ATGroupsAmountInfantry {
+			title = "Amount of AT groups on the Infantry Only";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 1;
+		};
+		class title2
+		{
+			title = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ AO's ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+			values[] = {0};
+			texts[] = {""};
+			default = 0;
+		};
+		class EnemyLeftThreshhold {
+			title = "Enemy Left Threshold";
+			values[] = {1,2,3,4,5,6,7,8,9,10};
+			texts[] = {"1","2","3","4","5","6","7","8","9","10"};
+			default = 9;
+		};
+		class AOSize {
+			title = "Main AO Diameter";
+			values[] = {200,300,400,500,600,700,800,900,1000};
+			texts[] = {"200m","300m","400m","500m","600m","700m","800m","900m","1,000m"};
+			default = 800;
+		};
+		class AntiAirAmount {
+			title = "Amount of AA vehicles on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6};
+			texts[] = {"1", "2", "3", "4", "5", "6"};
+			default = 3;
+		};
+		class MRAPAmount {
+			title = "Amount of MRAPs on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6};
+			texts[] = {"1", "2", "3", "4", "5", "6"};
+			default = 4;
+		};
+		class RandomVehcsAmount {
+			title = "Amount of random vehicles on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6};
+			texts[] = {"1", "2", "3", "4", "5", "6"};
+			default = 3;
+		};
+		class InfantryGroupsAmount {
+			title = "Amount of infantry groups on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 10;
+		};
+		class AAGroupsAmount {
+			title = "Amount of AA groups on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 2;
+		};
+		class ATGroupsAmount {
+			title = "Amount of AT groups on the main AO";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
+			default = 4;
+		};
+		class title3
+		{
+			title = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ AI Skill ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+			values[] = {0};
+			texts[] = {""};
+			default = 0;
+		};
+		class AIAimingAccuracy {
+			title = "AI aiming accuracy";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 3;
+		};
+		class AIAimingShake {
+			title = "AI aiming shake";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 3;
+		};
+		class AIAimingSpeed {
+			title = "AI aiming speed";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 5;
+		};
+		class AISpotingDistance {
+			title = "AI spotting distance";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 5;
+		};
+		class AISpottingSpeed {
+			title = "AI spotting speed";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 3;
+		};
+		class AICourage {
+			title = "AI courage";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 5;
+		};
+		class AIReloadSpeed {
+			title = "AI reload speed";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 2;
+		};
+		class AICommandingSkill {
+			title = "AI commanding skill";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 5;
+		};
+		class AIGeneralSkill {
+			title = "AI general skill";
+			values[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+			texts[] = {"0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9", "1"};
+			default = 4;
+		};
+	};

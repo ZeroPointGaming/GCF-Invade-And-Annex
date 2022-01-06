@@ -1,0 +1,1 @@
+_handle=createdialog "AdminMainMenu_dialog";
